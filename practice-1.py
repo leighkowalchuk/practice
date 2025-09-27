@@ -15,8 +15,39 @@ class AccountNotFoundError(Exception):
     """Raised when an account does not exist."""
     pass
 
+class NotLoggedInError(Exception):
+    """Raised when not logged into an account."""
+    pass
+
+class AlreadyLoggedInError(Exception):
+    """Raised when already logged into a different account."""
+    pass
+
+class User:
+    def __init__(self):
+        self.current = None
+
+user = User()
+
 account_balances = {}
 account_logs = {}
+
+def login(account_name):
+    existing_account(account_name)
+    if user.current:
+        print(f"Already logged into {user.current}")
+        return
+    user.current = account_name
+    print(f"Successfully logged in {account_name}")
+
+def logout(account_name):
+    if not user.current:
+        print("No one is logged in")
+    elif account_name != user.current:
+        print("Logged into a different account")
+    else:
+        user.current = None
+        print(f"Successfully logged out {account_name}")
 
 def register_account(account_name):
     if account_name in account_balances:
@@ -28,6 +59,7 @@ def register_account(account_name):
     print(f"Account {account_name} registered")
 
 def deposit(account_name, amount):
+    login_check(account_name)
     existing_account(account_name)          
     amount = round(float(amount), 2)
     if not (0 < amount <= 10000):
@@ -38,12 +70,14 @@ def deposit(account_name, amount):
     account_logs[account_name].append(f"Deposited {amount}")
 
 def balance(account_name):
+    login_check(account_name)
     existing_account(account_name)
     balance = account_balances[account_name]
     print(f"Balance for {account_name} is {balance}")
     account_logs[account_name].append(f"Checked balance: {balance}")
 
 def withdraw(account_name, amount):
+    login_check(account_name)
     existing_account(account_name)          
     amount = round(float(amount), 2)
     if not (0 < amount <= 10000):
@@ -57,6 +91,7 @@ def withdraw(account_name, amount):
     account_logs[account_name].append(f"Withdrew {amount}")
 
 def logs(account_name):
+    login_check(account_name)
     existing_account(account_name)
     print(f"Logs for {account_name}:")
     for log in account_logs[account_name]:
@@ -65,6 +100,12 @@ def logs(account_name):
 def existing_account(account_name):
     if account_name not in account_balances:
         raise AccountNotFoundError("Account does not exist")
+    
+def login_check(account_name):
+    if user.current is None:
+        raise NotLoggedInError("Must be logged in")
+    if user.current != account_name:
+        raise AlreadyLoggedInError(f"Must be logged in as {account_name} (currently logged in as {user.current})")
 
 actions = {
     "register_account": register_account,
@@ -72,6 +113,8 @@ actions = {
     "balance": balance,
     "withdraw": withdraw,
     "logs": logs,
+    "login": login,
+    "logout": logout
 }
 if __name__ == "__main__":
     print("Welcome to The Beast Bank!")
@@ -94,5 +137,9 @@ if __name__ == "__main__":
             print("Invalid command.")
         except AccountNotFoundError:
             print("Account does not exist")
+        except NotLoggedInError:
+            print("Not logged in")
+        except AlreadyLoggedInError:
+            print("Already logged into a different account")
         else:
             command_count += 1
