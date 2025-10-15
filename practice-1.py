@@ -1,16 +1,3 @@
-"""
-You need to implement a bank system that will allow a certain group of actions.
-* register_account account_name (unique)
-    registers an account, account name needs to be unique
-* deposit account_name amount (0 < amount <= 10000)
-    deposits name to an existing account, needs to validate amount constraints
-* balance account_name
-    checks balance for a valid account
-* withdraw account_name amount (0 < amount <= min(10000, balance))
-    withdraws amount from a valid account, needs to validate amount constraints
-* logs account_name
-    prints all actions executed in order over an account.
-"""
 class AccountNotFoundError(Exception):
     """Raised when an account does not exist."""
     pass
@@ -31,6 +18,8 @@ user = User()
 
 account_balances = {}
 account_logs = {}
+
+transfers = []
 
 def login(account_name):
     existing_account(account_name)
@@ -99,13 +88,70 @@ def logs(account_name):
 
 def existing_account(account_name):
     if account_name not in account_balances:
-        raise AccountNotFoundError("Account does not exist")
+        raise AccountNotFoundError(f"The account {account_name} does not exist")
     
 def login_check(account_name):
     if user.current is None:
         raise NotLoggedInError("Must be logged in")
     if user.current != account_name:
         raise AlreadyLoggedInError(f"Must be logged in as {account_name} (currently logged in as {user.current})")
+    
+def transfer(account_name, recipient_name, amount):
+    login_check(account_name)
+    existing_account(account_name) #cannot transfer from an account that does not exist"
+    existing_account(recipient_name) #cannot transfer to an account that does not exist"
+    withdraw(account_name, amount) #cannot withdraw insufficient funds
+
+    transfers.append({"from":account_name, "to":recipient_name, "amount":amount})
+
+def list_pending(account_name):
+    login_check(account_name)
+    existing_account(account_name)
+
+    pending = []
+    for transfer in transfers:
+        if transfer["to"] == account_name:
+            pending.append({"from": transfer["from"], "amount": transfer["amount"]})
+
+    print(pending)
+
+def accept_transfer(account_name, sender_name, amount):
+    login_check(account_name)
+    existing_account(account_name)
+
+    for transfer in transfers:
+        if transfer["to"] == account_name and transfer["from"] == sender_name and transfer["amount"] == amount:
+            transfers.remove(transfer)
+            deposit(account_name, amount)
+            return
+        else:
+            print(f"Transfer of {amount} not found")
+
+def reject_transfer(account_name, sender_name, amount):
+    login_check(account_name)
+    existing_account(account_name)
+
+    for transfer in transfers:
+        if transfer["to"] == account_name and transfer["from"] == sender_name and transfer["amount"] == amount:
+            transfers.remove(transfer)
+            account_balances[sender_name] += round(float(amount), 2)
+            print(f"Returned {amount} to {sender_name}")
+            return
+        else:
+            print(f"Transfer of {amount} not found")
+        
+def cancel_transfer(account_name, recipient_name, amount):
+    login_check(account_name)
+    existing_account(account_name)
+
+    for transfer in transfers:
+        if transfer["to"] == recipient_name and transfer["from"] == account_name and transfer["amount"] == amount:
+            transfers.remove(transfer)
+            deposit(account_name, amount)
+            return
+        else:
+            print(f"Transfer of {amount} not found")
+    
 
 actions = {
     "register_account": register_account,
@@ -114,7 +160,12 @@ actions = {
     "withdraw": withdraw,
     "logs": logs,
     "login": login,
-    "logout": logout
+    "logout": logout,
+    "transfer": transfer,
+    "list_pending": list_pending,
+    "accept_transfer": accept_transfer,
+    "reject_transfer": reject_transfer,
+    "cancel_transfer": cancel_transfer
 }
 if __name__ == "__main__":
     print("Welcome to The Beast Bank!")
