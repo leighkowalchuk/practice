@@ -102,10 +102,10 @@ def transfer(recipient_name, amount):
     login_check(user.current)
     existing_account(user.current) #cannot transfer from an account that does not exist"
     existing_account(recipient_name) #cannot transfer to an account that does not exist"
-    withdraw(amount) #cannot withdraw insufficient funds
-
-    transfers.append({"from":user.current, "to":recipient_name, "amount":amount})
+    
     print(f"Sending {round(float(amount), 2)} to {recipient_name}")
+    withdraw(amount) #cannot withdraw insufficient funds
+    transfers.append({"from":user.current, "to":recipient_name, "amount":amount})
 
 def list_pending():
     login_check(user.current)
