@@ -1,3 +1,5 @@
+"Implement banking system"
+
 class AccountNotFoundError(Exception):
     """Raised when an account does not exist."""
     pass
@@ -134,7 +136,7 @@ def reject_transfer(account_name, sender_name, amount):
     for transfer in transfers:
         if transfer["to"] == account_name and transfer["from"] == sender_name and transfer["amount"] == amount:
             transfers.remove(transfer)
-            account_balances[sender_name] += round(float(amount), 2)
+            account_balances[sender_name] += float(amount)
             print(f"Returned {amount} to {sender_name}")
             return
         else:
