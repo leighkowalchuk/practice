@@ -49,43 +49,43 @@ def register_account(account_name):
     account_logs[account_name].append("Account registered")
     print(f"Account {account_name} registered")
 
-def deposit(account_name, amount):
-    login_check(account_name)
-    existing_account(account_name)          
+def deposit(amount):
+    login_check(user.current)
+    existing_account(user.current)          
     amount = round(float(amount), 2)
     if not (0 < amount <= 10000):
         print("Invalid deposit amount.")
         return
-    account_balances[account_name] += amount
-    print(f"Deposited {amount} to {account_name}")
-    account_logs[account_name].append(f"Deposited {amount}")
+    account_balances[user.current] += amount
+    print(f"Deposited {amount} to {user.current}")
+    account_logs[user.current].append(f"Deposited {amount}")
 
-def balance(account_name):
-    login_check(account_name)
-    existing_account(account_name)
-    balance = account_balances[account_name]
-    print(f"Balance for {account_name} is {balance}")
-    account_logs[account_name].append(f"Checked balance: {balance}")
+def balance():
+    login_check(user.current)
+    existing_account(user.current)
+    balance = account_balances[user.current]
+    print(f"Balance for {user.current} is {balance}")
+    account_logs[user.current].append(f"Checked balance: {balance}")
 
-def withdraw(account_name, amount):
-    login_check(account_name)
-    existing_account(account_name)          
+def withdraw(amount):
+    login_check(user.current)
+    existing_account(user.current)          
     amount = round(float(amount), 2)
     if not (0 < amount <= 10000):
         print("Invalid withdrawal amount")
         return
-    if account_balances[account_name] - amount < 0:
+    if account_balances[user.current] - amount < 0:
         print("Insufficient funds")
         return
-    account_balances[account_name] -= amount
-    print(f"Withdrew {amount} from {account_name}")
-    account_logs[account_name].append(f"Withdrew {amount}")
+    account_balances[user.current] -= amount
+    print(f"Withdrew {amount} from {user.current}")
+    account_logs[user.current].append(f"Withdrew {amount}")
 
-def logs(account_name):
-    login_check(account_name)
-    existing_account(account_name)
-    print(f"Logs for {account_name}:")
-    for log in account_logs[account_name]:
+def logs():
+    login_check(user.current)
+    existing_account(user.current)
+    print(f"Logs for {user.current}:")
+    for log in account_logs[user.current]:
         print(log)
 
 def existing_account(account_name):
@@ -98,65 +98,66 @@ def login_check(account_name):
     if user.current != account_name:
         raise AlreadyLoggedInError(f"Must be logged in as {account_name} (currently logged in as {user.current})")
     
-def transfer(account_name, recipient_name, amount):
-    login_check(account_name)
-    existing_account(account_name) #cannot transfer from an account that does not exist"
+def transfer(recipient_name, amount):
+    login_check(user.current)
+    existing_account(user.current) #cannot transfer from an account that does not exist"
     existing_account(recipient_name) #cannot transfer to an account that does not exist"
-    withdraw(account_name, amount) #cannot withdraw insufficient funds
+    withdraw(amount) #cannot withdraw insufficient funds
 
-    transfers.append({"from":account_name, "to":recipient_name, "amount":amount})
+    transfers.append({"from":user.current, "to":recipient_name, "amount":amount})
+    print(f"Sending {round(float(amount), 2)} to {recipient_name}")
 
-def list_pending(account_name):
-    login_check(account_name)
-    existing_account(account_name)
+def list_pending():
+    login_check(user.current)
+    existing_account(user.current)
 
     pending = []
     for transfer in transfers:
-        if transfer["to"] == account_name:
+        if transfer["to"] == user.current:
             pending.append({"from": transfer["from"], "amount": transfer["amount"]})
 
-    print(pending)
+    print(pending) #format this better
 
-def accept_transfer(account_name, sender_name, amount):
-    login_check(account_name)
-    existing_account(account_name)
+def accept_transfer(sender_name, amount):
+    login_check(user.current)
+    existing_account(user.current)
 
     for transfer in transfers:
-        if transfer["to"] == account_name and transfer["from"] == sender_name and transfer["amount"] == amount:
+        if transfer["to"] == user.current and transfer["from"] == sender_name and transfer["amount"] == amount:
             transfers.remove(transfer)
-            deposit(account_name, amount)
+            deposit(amount)
             return
-        else:
-            print(f"Transfer of {amount} not found")
+        
+    print(f"Transfer of {amount} not found")
 
-def reject_transfer(account_name, sender_name, amount):
-    login_check(account_name)
-    existing_account(account_name)
+def reject_transfer(sender_name, amount):
+    login_check(user.current)
+    existing_account(user.current)
 
     for transfer in transfers:
-        if transfer["to"] == account_name and transfer["from"] == sender_name and transfer["amount"] == amount:
+        if transfer["to"] == user.current and transfer["from"] == sender_name and transfer["amount"] == amount:
             transfers.remove(transfer)
             account_balances[sender_name] += float(amount)
             print(f"Returned {amount} to {sender_name}")
             return
-        else:
-            print(f"Transfer of {amount} not found")
         
-def cancel_transfer(account_name, recipient_name, amount):
-    login_check(account_name)
-    existing_account(account_name)
+    print(f"Transfer of {amount} not found")
+        
+def cancel_transfer(recipient_name, amount):
+    login_check(user.current)
+    existing_account(user.current)
 
     for transfer in transfers:
-        if transfer["to"] == recipient_name and transfer["from"] == account_name and transfer["amount"] == amount:
+        if transfer["to"] == recipient_name and transfer["from"] == user.current and transfer["amount"] == amount:
             transfers.remove(transfer)
-            deposit(account_name, amount)
+            deposit(amount)
             return
-        else:
-            print(f"Transfer of {amount} not found")
+    
+    print(f"Transfer of {amount} not found")
     
 
 actions = {
-    "register_account": register_account,
+    "register": register_account,
     "deposit": deposit,
     "balance": balance,
     "withdraw": withdraw,
